@@ -12,32 +12,32 @@ import Link from 'next/link';
 import { Demo } from '@/types';
 import { ChartData, ChartOptions } from 'chart.js';
 
-const lineData: ChartData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-        {
-            label: 'First Dataset',
-            data: [65, 59, 80, 81, 56, 55, 40],
-            fill: false,
-            backgroundColor: '#2f4860',
-            borderColor: '#2f4860',
-            tension: 0.4
-        },
-        {
-            label: 'Second Dataset',
-            data: [28, 48, 40, 19, 86, 27, 90],
-            fill: false,
-            backgroundColor: '#00bb7e',
-            borderColor: '#00bb7e',
-            tension: 0.4
-        }
-    ]
-};
+// const lineData: ChartData = {
+//     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+//     datasets: [
+//         {
+//             label: 'First Dataset',
+//             data: [65, 59, 80, 81, 56, 55, 40],
+//             fill: false,
+//             backgroundColor: '#2f4860',
+//             borderColor: '#2f4860',
+//             tension: 0.4
+//         },
+//         {
+//             label: 'Second Dataset',
+//             data: [28, 48, 40, 19, 86, 27, 90],
+//             fill: false,
+//             backgroundColor: '#00bb7e',
+//             borderColor: '#00bb7e',
+//             tension: 0.4
+//         }
+//     ]
+// };
 
 const Dashboard = () => {
     const [products, setProducts] = useState<Demo.Product[]>([]);
-    const menu1 = useRef<Menu>(null);
-    const menu2 = useRef<Menu>(null);
+    // const menu1 = useRef<Menu>(null);
+    // const menu2 = useRef<Menu>(null);
     const [lineOptions, setLineOptions] = useState<ChartOptions>({});
     const { layoutConfig } = useContext(LayoutContext);
 
@@ -130,8 +130,8 @@ const Dashboard = () => {
                 <div className="card mb-0">
                     <div className="flex justify-content-between mb-3">
                         <div>
-                            <span className="block text-500 font-medium mb-3">Orders</span>
-                            <div className="text-900 font-medium text-xl">152</div>
+                            <span className="block text-500 font-medium mb-3">ADMIN</span>
+                            <div className="text-900 font-medium text-xl">DETAIL ADMIN</div>
                         </div>
                         <div className="flex align-items-center justify-content-center bg-blue-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                             <i className="pi pi-shopping-cart text-blue-500 text-xl" />
@@ -145,8 +145,8 @@ const Dashboard = () => {
                 <div className="card mb-0">
                     <div className="flex justify-content-between mb-3">
                         <div>
-                            <span className="block text-500 font-medium mb-3">Revenue</span>
-                            <div className="text-900 font-medium text-xl">$2.100</div>
+                            <span className="block text-500 font-medium mb-3">100</span>
+                            <div className="text-900 font-medium text-xl">COMPANY</div>
                         </div>
                         <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                             <i className="pi pi-map-marker text-orange-500 text-xl" />
@@ -160,8 +160,8 @@ const Dashboard = () => {
                 <div className="card mb-0">
                     <div className="flex justify-content-between mb-3">
                         <div>
-                            <span className="block text-500 font-medium mb-3">Customers</span>
-                            <div className="text-900 font-medium text-xl">28441</div>
+                            <span className="block text-500 font-medium mb-3">10</span>
+                            <div className="text-900 font-medium text-xl">PRODUCT</div>
                         </div>
                         <div className="flex align-items-center justify-content-center bg-cyan-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                             <i className="pi pi-inbox text-cyan-500 text-xl" />
@@ -175,8 +175,8 @@ const Dashboard = () => {
                 <div className="card mb-0">
                     <div className="flex justify-content-between mb-3">
                         <div>
-                            <span className="block text-500 font-medium mb-3">Comments</span>
-                            <div className="text-900 font-medium text-xl">152 Unread</div>
+                            <span className="block text-500 font-medium mb-3">XX</span>
+                            <div className="text-900 font-medium text-xl">APPROVED</div>
                         </div>
                         <div className="flex align-items-center justify-content-center bg-purple-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                             <i className="pi pi-comment text-purple-500 text-xl" />
@@ -187,16 +187,16 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="col-12 xl:col-6">
+            <div className="col-12  full">
                 <div className="card">
-                    <h5>Recent Sales</h5>
+                    <h5>Company list</h5>
                     <DataTable value={products} rows={5} paginator responsiveLayout="scroll">
-                        <Column header="Image" body={(data) => <img className="shadow-2" src={`/demo/images/product/${data.image}`} alt={data.image} width="50" />} />
-                        <Column field="name" header="Name" sortable style={{ width: '35%' }} />
-                        <Column field="price" header="Price" sortable style={{ width: '35%' }} body={(data) => formatCurrency(data.price)} />
+                        <Column header="#" body={(data) => <img className="shadow-2" src={`/demo/images/product/${data.image}`} alt={data.image} width="50" />} />
+                        <Column field="name" header="ชื่อบริษัท" sortable style={{ width: '35%' }} />
+                        <Column field="price" header="ประเภทอุตสาหรรม" sortable style={{ width: '35%' }} body={(data) => formatCurrency(data.price)} />
+                        <Column header="จำนวนผลิตภัณฑ์" body={(data) => formatCurrency(data.price)} />
                         <Column
-                            header="View"
-                            style={{ width: '15%' }}
+                            field="price"
                             body={() => (
                                 <>
                                     <Button icon="pi pi-search" text />
@@ -205,7 +205,7 @@ const Dashboard = () => {
                         />
                     </DataTable>
                 </div>
-                <div className="card">
+                {/* <div className="card">
                     <div className="flex justify-content-between align-items-center mb-5">
                         <h5>Best Selling Products</h5>
                         <div>
@@ -295,9 +295,9 @@ const Dashboard = () => {
                         </li>
                     </ul>
                 </div>
-            </div>
+            </div> */}
 
-            <div className="col-12 xl:col-6">
+                {/* <div className="col-12 xl:col-6">
                 <div className="card">
                     <h5>Sales Overview</h5>
                     <Chart type="line" data={lineData} options={lineOptions} />
@@ -367,8 +367,8 @@ const Dashboard = () => {
                             </span>
                         </li>
                     </ul>
-                </div>
-                <div
+                </div> */}
+                {/* <div
                     className="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3"
                     style={{
                         borderRadius: '1rem',
@@ -384,7 +384,7 @@ const Dashboard = () => {
                             Get Started
                         </Link>
                     </div>
-                </div>
+                </div> */}
             </div>
         </div>
     );

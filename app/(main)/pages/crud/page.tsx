@@ -16,9 +16,17 @@ import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { ProductService } from '../../../../demo/service/ProductService';
 import { Demo } from '@/types';
+import { TabView, TabPanel } from 'primereact/tabview';
+import { useRouter } from 'next/navigation';
+import Verifier from '../../uikit/menu/verifier/page';
+import Register_round from '../../uikit/menu/register_round/page';
+import Unit from '../../uikit/menu/unit/page';
+import Industrial from '../../uikit/menu/industrial/page';
+import TGO from '../../uikit/menu/TGO/page';
+import PCR from '../../uikit/menu/PCR/page';
 
-/* @todo Used 'as any' for types here. Will fix in next version due to onSelectionChange event type issue. */
 const Crud = () => {
+    // Product related state and functions
     let emptyProduct: Demo.Product = {
         id: '',
         name: '',
@@ -31,6 +39,9 @@ const Crud = () => {
         inventoryStatus: 'INSTOCK'
     };
 
+    // State for active menu/content
+    const [activeContent, setActiveContent] = useState('verifier');
+    const router = useRouter();
     const [products, setProducts] = useState(null);
     const [productDialog, setProductDialog] = useState(false);
     const [deleteProductDialog, setDeleteProductDialog] = useState(false);
@@ -42,10 +53,26 @@ const Crud = () => {
     const toast = useRef<Toast>(null);
     const dt = useRef<DataTable<any>>(null);
 
+    // For page title and icon display
+    const menuItems = {
+        verifier: { title: 'ผู้ทวนสอบ', icon: 'pi pi-verified', color: 'primary' },
+        register_round: { title: 'รอบการขึ้นทะเบียน', icon: 'pi pi-calendar', color: 'primary' },
+        unit: { title: 'หน่วย', icon: 'pi pi-sliders-h', color: 'orange-500' },
+        industrial: { title: 'อุตสาหกรรม', icon: 'pi pi-building', color: 'blue-500' },
+        TGO: { title: 'TGO', icon: 'pi pi-globe', color: 'teal-500' },
+        PCR: { title: 'PCR', icon: 'pi pi-chart-bar', color: 'purple-500' }
+    };
+
+    // Navigate to different menu
+    const navigateToMenu = (menu: string) => {
+        setActiveContent(menu);
+    };
+
     useEffect(() => {
         ProductService.getProducts().then((data) => setProducts(data as any));
     }, []);
 
+    // All your existing functions...
     const formatCurrency = (value: number) => {
         return value.toLocaleString('en-US', {
             style: 'currency',
@@ -74,18 +101,16 @@ const Crud = () => {
 
     const saveProduct = () => {
         setSubmitted(true);
-
         if (product.name.trim()) {
             let _products = [...(products as any)];
             let _product = { ...product };
             if (product.id) {
                 const index = findIndexById(product.id);
-
                 _products[index] = _product;
                 toast.current?.show({
                     severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Product Updated',
+                    summary: 'สำเร็จ',
+                    detail: 'อัพเดตข้อมูลแล้ว',
                     life: 3000
                 });
             } else {
@@ -94,12 +119,11 @@ const Crud = () => {
                 _products.push(_product);
                 toast.current?.show({
                     severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Product Created',
+                    summary: 'สำเร็จ',
+                    detail: 'เพิ่มข้อมูลแล้ว',
                     life: 3000
                 });
             }
-
             setProducts(_products as any);
             setProductDialog(false);
             setProduct(emptyProduct);
@@ -123,8 +147,8 @@ const Crud = () => {
         setProduct(emptyProduct);
         toast.current?.show({
             severity: 'success',
-            summary: 'Successful',
-            detail: 'Product Deleted',
+            summary: 'สำเร็จ',
+            detail: 'ลบข้อมูลแล้ว',
             life: 3000
         });
     };
@@ -137,8 +161,28 @@ const Crud = () => {
                 break;
             }
         }
-
         return index;
+    };
+    // เพิ่มฟังก์ชันนี้เข้าไปในโค้ด
+    const onCategoryChange = (e: RadioButtonChangeEvent) => {
+        let _product = { ...product };
+        _product['category'] = e.value;
+        setProduct(_product);
+    };
+
+    // และเพิ่มฟังก์ชันนี้ซึ่งคุณมีในโค้ดเดิมเช่นกัน
+    const onInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, name: string) => {
+        const val = (e.target && e.target.value) || '';
+        let _product = { ...product };
+        _product[`${name}`] = val;
+        setProduct(_product);
+    };
+
+    const onInputNumberChange = (e: InputNumberValueChangeEvent, name: string) => {
+        const val = e.value || 0;
+        let _product = { ...product };
+        _product[`${name}`] = val;
+        setProduct(_product);
     };
 
     const createId = () => {
@@ -150,275 +194,260 @@ const Crud = () => {
         return id;
     };
 
-    const exportCSV = () => {
-        dt.current?.exportCSV();
+    // Render content based on active menu
+    const renderContent = () => {
+        switch (activeContent) {
+            case 'verifier':
+                return <Verifier />;
+            case 'register_round':
+                return <Register_round />
+            case 'unit':
+                return <Unit />
+            case 'industrial':
+                return <Industrial />
+            case 'TGO':
+                return <TGO/>
+            case 'PCR':
+                return <PCR />
+            default:
+                return <div className="p-4">กรุณาเลือกเมนู</div>;
+        }
     };
-
-    const confirmDeleteSelected = () => {
-        setDeleteProductsDialog(true);
-    };
-
-    const deleteSelectedProducts = () => {
-        let _products = (products as any)?.filter((val: any) => !(selectedProducts as any)?.includes(val));
-        setProducts(_products);
-        setDeleteProductsDialog(false);
-        setSelectedProducts(null);
-        toast.current?.show({
-            severity: 'success',
-            summary: 'Successful',
-            detail: 'Products Deleted',
-            life: 3000
-        });
-    };
-
-    const onCategoryChange = (e: RadioButtonChangeEvent) => {
-        let _product = { ...product };
-        _product['category'] = e.value;
-        setProduct(_product);
-    };
-
-    const onInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, name: string) => {
-        const val = (e.target && e.target.value) || '';
-        let _product = { ...product };
-        _product[`${name}`] = val;
-
-        setProduct(_product);
-    };
-
-    const onInputNumberChange = (e: InputNumberValueChangeEvent, name: string) => {
-        const val = e.value || 0;
-        let _product = { ...product };
-        _product[`${name}`] = val;
-
-        setProduct(_product);
-    };
-
-    const leftToolbarTemplate = () => {
-        return (
-            <React.Fragment>
-                <div className="my-2">
-                    <Button label="New" icon="pi pi-plus" severity="success" className=" mr-2" onClick={openNew} />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" onClick={confirmDeleteSelected} disabled={!selectedProducts || !(selectedProducts as any).length} />
-                </div>
-            </React.Fragment>
-        );
-    };
-
-    const rightToolbarTemplate = () => {
-        return (
-            <React.Fragment>
-                <FileUpload mode="basic" accept="image/*" maxFileSize={1000000} chooseLabel="Import" className="mr-2 inline-block" />
-                <Button label="Export" icon="pi pi-upload" severity="help" onClick={exportCSV} />
-            </React.Fragment>
-        );
-    };
-
-    const codeBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <span className="p-column-title">Code</span>
-                {rowData.code}
-            </>
-        );
-    };
-
-    const nameBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <span className="p-column-title">Name</span>
-                {rowData.name}
-            </>
-        );
-    };
-
-    const imageBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <span className="p-column-title">Image</span>
-                <img src={`/demo/images/product/${rowData.image}`} alt={rowData.image} className="shadow-2" width="100" />
-            </>
-        );
-    };
-
-    const priceBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <span className="p-column-title">Price</span>
-                {formatCurrency(rowData.price as number)}
-            </>
-        );
-    };
-
-    const categoryBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <span className="p-column-title">Category</span>
-                {rowData.category}
-            </>
-        );
-    };
-
-    const ratingBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <span className="p-column-title">Reviews</span>
-                <Rating value={rowData.rating} readOnly cancel={false} />
-            </>
-        );
-    };
-
-    const statusBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <span className="p-column-title">Status</span>
-                <span className={`product-badge status-${rowData.inventoryStatus?.toLowerCase()}`}>{rowData.inventoryStatus}</span>
-            </>
-        );
-    };
-
-    const actionBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <Button icon="pi pi-pencil" rounded severity="success" className="mr-2" onClick={() => editProduct(rowData)} />
-                <Button icon="pi pi-trash" rounded severity="warning" onClick={() => confirmDeleteProduct(rowData)} />
-            </>
-        );
-    };
-
-    const header = (
-        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <h5 className="m-0">Manage Products</h5>
-            <span className="block mt-2 md:mt-0 p-input-icon-left">
-                <i className="pi pi-search" />
-                <InputText type="search" onInput={(e) => setGlobalFilter(e.currentTarget.value)} placeholder="Search..." />
-            </span>
-        </div>
-    );
 
     const productDialogFooter = (
         <>
-            <Button label="Cancel" icon="pi pi-times" text onClick={hideDialog} />
-            <Button label="Save" icon="pi pi-check" text onClick={saveProduct} />
+            <Button label="ยกเลิก" icon="pi pi-times" text onClick={hideDialog} />
+            <Button label="บันทึก" icon="pi pi-check" text onClick={saveProduct} />
         </>
     );
+
     const deleteProductDialogFooter = (
         <>
-            <Button label="No" icon="pi pi-times" text onClick={hideDeleteProductDialog} />
-            <Button label="Yes" icon="pi pi-check" text onClick={deleteProduct} />
-        </>
-    );
-    const deleteProductsDialogFooter = (
-        <>
-            <Button label="No" icon="pi pi-times" text onClick={hideDeleteProductsDialog} />
-            <Button label="Yes" icon="pi pi-check" text onClick={deleteSelectedProducts} />
+            <Button label="ไม่" icon="pi pi-times" text onClick={hideDeleteProductDialog} />
+            <Button label="ใช่" icon="pi pi-check" text onClick={deleteProduct} />
         </>
     );
 
     return (
-        <div className="grid crud-demo">
+        <div className="grid">
+            <Toast ref={toast} />
+
             <div className="col-12">
-                <div className="card">
-                    <Toast ref={toast} />
-                    <Toolbar className="mb-4" left={leftToolbarTemplate} right={rightToolbarTemplate}></Toolbar>
-
-                    <DataTable
-                        ref={dt}
-                        value={products}
-                        selection={selectedProducts}
-                        onSelectionChange={(e) => setSelectedProducts(e.value as any)}
-                        dataKey="id"
-                        paginator
-                        rows={10}
-                        rowsPerPageOptions={[5, 10, 25]}
-                        className="datatable-responsive"
-                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-                        globalFilter={globalFilter}
-                        emptyMessage="No products found."
-                        header={header}
-                        responsiveLayout="scroll"
-                    >
-                        <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
-                        <Column field="code" header="Code" sortable body={codeBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column field="name" header="Name" sortable body={nameBodyTemplate} headerStyle={{ minWidth: '15rem' }}></Column>
-                        <Column header="Image" body={imageBodyTemplate}></Column>
-                        <Column field="price" header="Price" body={priceBodyTemplate} sortable></Column>
-                        <Column field="category" header="Category" sortable body={categoryBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column field="rating" header="Reviews" body={ratingBodyTemplate} sortable></Column>
-                        <Column field="inventoryStatus" header="Status" body={statusBodyTemplate} sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                        <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                    </DataTable>
-
-                    <Dialog visible={productDialog} style={{ width: '450px' }} header="Product Details" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                        {product.image && <img src={`/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
-                        <div className="field">
-                            <label htmlFor="name">Name</label>
-                            <InputText
-                                id="name"
-                                value={product.name}
-                                onChange={(e) => onInputChange(e, 'name')}
-                                required
-                                autoFocus
-                                className={classNames({
-                                    'p-invalid': submitted && !product.name
-                                })}
-                            />
-                            {submitted && !product.name && <small className="p-invalid">Name is required.</small>}
+                {/* Menu Cards */}
+                <div className="card bg-white p-5 rounded-lg shadow-md mb-4">
+                    <h2 className="text-2xl font-medium mb-4 text-gray-800 border-bottom-1 border-gray-200 pb-2">จัดการระบบ</h2>
+                    <div className="grid">
+                        {/* Verifier Card */}
+                        <div className="col-12 md:col-6 lg:col-3">
+                            <div className="p-3">
+                                <div
+                                    className={`shadow-2 p-3 h-full border-round bg-white cursor-pointer flex flex-column align-items-center justify-content-center hover:shadow-8 transition-duration-150 ${
+                                        activeContent === 'verifier' ? 'border-2 border-primary' : ''
+                                    }`}
+                                    onClick={() => navigateToMenu('verifier')}
+                                >
+                                    <span className="bg-primary border-circle p-3 mb-3">
+                                        <i className="pi pi-verified text-0 text-xl"></i>
+                                    </span>
+                                    <div className="text-900 font-medium mb-2 text-center">ผู้ทวนสอบ</div>
+                                    <span className="text-600 text-sm text-center">จัดการข้อมูลผู้ทวนสอบ</span>
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Register Round Card */}
+                        <div className="col-12 md:col-6 lg:col-3">
+                            <div className="p-3">
+                                <div
+                                    className={`shadow-2 p-3 h-full border-round bg-white cursor-pointer flex flex-column align-items-center justify-content-center hover:shadow-8 transition-duration-150 ${
+                                        activeContent === 'register_round' ? 'border-2 border-primary' : ''
+                                    }`}
+                                    onClick={() => navigateToMenu('register_round')}
+                                >
+                                    <span className="bg-primary-100 border-circle p-3 mb-3">
+                                        <i className="pi pi-calendar text-primary text-xl"></i>
+                                    </span>
+                                    <div className="text-900 font-medium mb-2 text-center">รอบการขึ้นทะเบียน</div>
+                                    <span className="text-600 text-sm text-center">กำหนดรอบการลงทะเบียน</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Unit Card */}
+                        <div className="col-12 md:col-6 lg:col-3">
+                            <div className="p-3">
+                                <div
+                                    className={`shadow-2 p-3 h-full border-round bg-white cursor-pointer flex flex-column align-items-center justify-content-center hover:shadow-8 transition-duration-150 ${
+                                        activeContent === 'unit' ? 'border-2 border-primary' : ''
+                                    }`}
+                                    onClick={() => navigateToMenu('unit')}
+                                >
+                                    <span className="bg-orange-100 border-circle p-3 mb-3">
+                                        <i className="pi pi-sliders-h text-orange-500 text-xl"></i>
+                                    </span>
+                                    <div className="text-900 font-medium mb-2 text-center">หน่วย</div>
+                                    <span className="text-600 text-sm text-center">จัดการข้อมูลหน่วยต่างๆ</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Industrial Card */}
+                        <div className="col-12 md:col-6 lg:col-3">
+                            <div className="p-3">
+                                <div
+                                    className={`shadow-2 p-3 h-full border-round bg-white cursor-pointer flex flex-column align-items-center justify-content-center hover:shadow-8 transition-duration-150 ${
+                                        activeContent === 'industrial' ? 'border-2 border-primary' : ''
+                                    }`}
+                                    onClick={() => navigateToMenu('industrial')}
+                                >
+                                    <span className="bg-blue-100 border-circle p-3 mb-3">
+                                        <i className="pi pi-building text-blue-500 text-xl"></i>
+                                    </span>
+                                    <div className="text-900 font-medium mb-2 text-center">อุตสาหกรรม</div>
+                                    <span className="text-600 text-sm text-center">รายชื่ออุตสาหกรรมทั้งหมด</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* TGO Card */}
+                        <div className="col-12 md:col-6 lg:col-3">
+                            <div className="p-3">
+                                <div
+                                    className={`shadow-2 p-3 h-full border-round bg-white cursor-pointer flex flex-column align-items-center justify-content-center hover:shadow-8 transition-duration-150 ${
+                                        activeContent === 'TGO' ? 'border-2 border-primary' : ''
+                                    }`}
+                                    onClick={() => navigateToMenu('TGO')}
+                                >
+                                    <span className="bg-teal-100 border-circle p-3 mb-3">
+                                        <i className="pi pi-globe text-teal-500 text-xl"></i>
+                                    </span>
+                                    <div className="text-900 font-medium mb-2 text-center">TGO</div>
+                                    <span className="text-600 text-sm text-center">ข้อมูล Thailand Greenhouse Gas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* PCR Card */}
+                        <div className="col-12 md:col-6 lg:col-3">
+                            <div className="p-3">
+                                <div
+                                    className={`shadow-2 p-3 h-full border-round bg-white cursor-pointer flex flex-column align-items-center justify-content-center hover:shadow-8 transition-duration-150 ${
+                                        activeContent === 'PCR' ? 'border-2 border-primary' : ''
+                                    }`}
+                                    onClick={() => navigateToMenu('PCR')}
+                                >
+                                    <span className="bg-purple-100 border-circle p-3 mb-3">
+                                        <i className="pi pi-chart-bar text-purple-500 text-xl"></i>
+                                    </span>
+                                    <div className="text-900 font-medium mb-2 text-center">PCR</div>
+                                    <span className="text-600 text-sm text-center">Product Category Rules</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Section */}
+                <div className="card">
+                    {/* Header with current menu info */}
+                    <div className="flex align-items-center justify-content-between pb-4 border-bottom-1 border-300 mb-4">
+                        <div className="flex align-items-center">
+                            <i className={`${menuItems[activeContent as keyof typeof menuItems]?.icon || 'pi pi-cog'} mr-2 text-xl text-${menuItems[activeContent as keyof typeof menuItems]?.color || 'primary'}`}></i>
+                            <h3 className="text-xl font-medium m-0">{menuItems[activeContent as keyof typeof menuItems]?.title || 'จัดการระบบ'}</h3>
+                        </div>
+
+                        {/* Action Button - Only show for certain content types */}
+                        {/* {['verifier', 'register_round', 'industrial'].includes(activeContent) && <Button label={`เพิ่ม${menuItems[activeContent as keyof typeof menuItems]?.title}`} icon="pi pi-plus" severity="success" onClick={openNew} />} */}
+                    </div>
+
+                    {/* Render content based on active menu */}
+                    {renderContent()}
+
+                    {/* Product Dialog */}
+                    <Dialog
+                        visible={productDialog}
+                        style={{ width: '450px' }}
+                        header={`${product.id ? 'แก้ไข' : 'เพิ่ม'}${menuItems[activeContent as keyof typeof menuItems]?.title || ''}`}
+                        modal
+                        className="p-fluid"
+                        footer={productDialogFooter}
+                        onHide={hideDialog}
+                    >
+                        {product.image && <img src={`/demo/images/product/${product.image}`} alt={product.image} width="150" className="mt-0 mx-auto mb-5 block shadow-2" />}
+
                         <div className="field">
-                            <label htmlFor="description">Description</label>
+                            <label htmlFor="name">ชื่อ</label>
+                            <InputText id="name" value={product.name} onChange={(e) => onInputChange(e, 'name')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.name })} />
+                            {submitted && !product.name && <small className="p-invalid">กรุณากรอกชื่อ</small>}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="description">รายละเอียด</label>
                             <InputTextarea id="description" value={product.description} onChange={(e) => onInputChange(e, 'description')} required rows={3} cols={20} />
                         </div>
 
-                        <div className="field">
-                            <label className="mb-3">Category</label>
-                            <div className="formgrid grid">
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category1" name="category" value="Accessories" onChange={onCategoryChange} checked={product.category === 'Accessories'} />
-                                    <label htmlFor="category1">Accessories</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category2" name="category" value="Clothing" onChange={onCategoryChange} checked={product.category === 'Clothing'} />
-                                    <label htmlFor="category2">Clothing</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category3" name="category" value="Electronics" onChange={onCategoryChange} checked={product.category === 'Electronics'} />
-                                    <label htmlFor="category3">Electronics</label>
-                                </div>
-                                <div className="field-radiobutton col-6">
-                                    <RadioButton inputId="category4" name="category" value="Fitness" onChange={onCategoryChange} checked={product.category === 'Fitness'} />
-                                    <label htmlFor="category4">Fitness</label>
-                                </div>
+                        {activeContent === 'register_round' && (
+                            <div className="field">
+                                <label htmlFor="date">วันที่</label>
+                                <InputText id="date" type="date" className="w-full" />
                             </div>
-                        </div>
+                        )}
 
-                        <div className="formgrid grid">
-                            <div className="field col">
-                                <label htmlFor="price">Price</label>
-                                <InputNumber id="price" value={product.price} onValueChange={(e) => onInputNumberChange(e, 'price')} mode="currency" currency="USD" locale="en-US" />
+                        {activeContent === 'industrial' && (
+                            <div className="field">
+                                <label className="mb-3">ประเภท</label>
+                                <div className="formgrid grid">
+                                    <div className="field-radiobutton col-6">
+                                        <RadioButton inputId="type1" name="category" value="Agriculture" onChange={onCategoryChange} checked={product.category === 'Agriculture'} />
+                                        <label htmlFor="type1">เกษตร</label>
+                                    </div>
+                                    <div className="field-radiobutton col-6">
+                                        <RadioButton inputId="type2" name="category" value="Manufacturing" onChange={onCategoryChange} checked={product.category === 'Manufacturing'} />
+                                        <label htmlFor="type2">การผลิต</label>
+                                    </div>
+                                    <div className="field-radiobutton col-6">
+                                        <RadioButton inputId="type3" name="category" value="Service" onChange={onCategoryChange} checked={product.category === 'Service'} />
+                                        <label htmlFor="type3">บริการ</label>
+                                    </div>
+                                    <div className="field-radiobutton col-6">
+                                        <RadioButton inputId="type4" name="category" value="Other" onChange={onCategoryChange} checked={product.category === 'Other'} />
+                                        <label htmlFor="type4">อื่นๆ</label>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="field col">
-                                <label htmlFor="quantity">Quantity</label>
-                                <InputNumber id="quantity" value={product.quantity} onValueChange={(e) => onInputNumberChange(e, 'quantity')} />
+                        )}
+
+                        {activeContent === 'unit' && (
+                            <div className="formgrid grid">
+                                <div className="field col">
+                                    <label htmlFor="unit">หน่วย</label>
+                                    <InputText id="unit" value={product.category} onChange={(e) => onInputChange(e, 'category')} />
+                                </div>
+                                <div className="field col">
+                                    <label htmlFor="abbreviation">ตัวย่อ</label>
+                                    <InputText id="abbreviation" value={product.code} onChange={(e) => onInputChange(e, 'code')} />
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </Dialog>
 
-                    <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
+                    {/* Delete Product Dialog */}
+                    <Dialog visible={deleteProductDialog} style={{ width: '450px' }} header="ยืนยัน" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                             {product && (
                                 <span>
-                                    Are you sure you want to delete <b>{product.name}</b>?
+                                    คุณต้องการลบข้อมูล <b>{product.name}</b> ใช่หรือไม่?
                                 </span>
                             )}
                         </div>
                     </Dialog>
 
-                    <Dialog visible={deleteProductsDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteProductsDialogFooter} onHide={hideDeleteProductsDialog}>
+                    {/* Delete Products Dialog */}
+                    <Dialog visible={deleteProductsDialog} style={{ width: '450px' }} header="ยืนยัน" modal onHide={hideDeleteProductsDialog} footer={deleteProductDialogFooter}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-                            {product && <span>Are you sure you want to delete the selected products?</span>}
+                            <span>คุณต้องการลบข้อมูลที่เลือกทั้งหมดใช่หรือไม่?</span>
                         </div>
                     </Dialog>
                 </div>
